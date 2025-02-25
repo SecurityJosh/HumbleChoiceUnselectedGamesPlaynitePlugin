@@ -8,5 +8,6 @@
     <StackPanel>
         <TextBlock Text="humblebundle.com _simpleauth_sess cookie value:"/>
         <TextBox Text="{Binding Settings.Cookie}"/>
+        <CheckBox Name="ImportEntitlements" IsChecked="{Binding Settings.ImportEntitlements}" Content="Import unredeemed Games from other purchases and bundles"/>
     </StackPanel>
 </UserControl>

@@ -18,6 +18,8 @@ namespace HumbleChoiceUnselected
     {
         private string cookie = String.Empty;
         public string Cookie { get; set; }
+        private bool importEntitlements = false;
+        public bool ImportEntitlements { get; set; }
 
         // Playnite serializes settings object to a JSON object and saves it as text file.
         // If you want to exclude some property from being saved then use `JsonDontSerialize` ignore attribute.
@@ -47,7 +49,7 @@ namespace HumbleChoiceUnselected
 
             // Load saved settings.
             var savedSettings = plugin.LoadPluginSettings<HumbleChoiceUnselectedSettings>();
-            
+
             // LoadPluginSettings returns null if no saved data is available.
             if (savedSettings != null)
             {
@@ -64,19 +66,24 @@ namespace HumbleChoiceUnselected
             // Code executed when settings view is opened and user starts editing values.
             editingClone = Serialization.GetClone(Settings);
 
-            if (Settings != null && Settings.Cookie != null && Settings.Cookie.Length > 0)
+            // TODO: Do I need to deserialize the new bool?
+            if (Settings != null)
             {
-                var decryptedCookie = Dpapi.Unprotect(Settings.Cookie, plugin.Id.ToString(), DataProtectionScope.CurrentUser);
+                if (Settings.Cookie != null && Settings.Cookie.Length > 0)
+                {
+                    var decryptedCookie = Dpapi.Unprotect(Settings.Cookie, plugin.Id.ToString(), DataProtectionScope.CurrentUser);
 
-                if (decryptedCookie != null)
-                {
-                    Settings.Cookie = decryptedCookie;
+                    if (decryptedCookie != null)
+                    {
+                        Settings.Cookie = decryptedCookie;
+                    }
+                    else
+                    {
+                        plugin.GetLogger().Error("Error decrypting cookie");
+                        Settings.Cookie = "";
+                    }
                 }
-                else
-                {
-                    plugin.GetLogger().Error("Error decrypting cookie");
-                    Settings.Cookie = "";
-                }
+
             }
         }
 
@@ -113,10 +120,10 @@ namespace HumbleChoiceUnselected
             // List of errors is presented to user if verification fails.
             errors = new List<string>();
 
-            if(Settings.Cookie?.Length > 0 && !Regex.IsMatch(settings.Cookie, @"^ey[a-zA-Z0-9+=]+\|\d+\|[a-f0-9]{40}$"))
+            if (Settings.Cookie?.Length > 0 && !Regex.IsMatch(settings.Cookie, @"^ey[a-zA-Z0-9+=]+\|\d+\|[a-f0-9]{40}$"))
             {
                 errors.Add("Cookie does not match expected format");
-            }       
+            }
 
             return errors.Count == 0;
         }
